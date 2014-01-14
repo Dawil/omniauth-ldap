@@ -24,9 +24,13 @@ module OmniAuth
       option :method, :plain
       option :uid, 'sAMAccountName'
       option :name_proc, lambda {|n| n}
+      option :request_phase_override
 
       def request_phase
         OmniAuth::LDAP::Adaptor.validate @options
+        unless options[:request_phase_override].nil?
+          return Rack::Response.new(options[:request_phase_override].call( request, callback_path ),200,{"content-type" => "text/html"}).finish
+        end
         f = OmniAuth::Form.new(:title => (options[:title] || "LDAP Authentication"), :url => callback_path)
         f.text_field 'Login', 'username'
         f.password_field 'Password', 'password'
